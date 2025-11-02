@@ -1,0 +1,38 @@
+{
+  "name": "MagicMirror Dev",
+  "dockerComposeFile": "../compose.yml",
+  "service": "magicmirror",
+  "runServices": ["magicmirror"],
+  "workspaceFolder": "/opt/magic_mirror/workspace",
+  "overrideCommand": false,
+  "shutdownAction": "stopCompose",
+  "remoteUser": "root",
+  "containerEnv": {
+    "IN_DEVCONTAINER": "1",
+    "DOCKER_CONTAINER_NAME": "magicmirror-dev"
+  },
+
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "MagicMirror",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "eamodio.gitlens",
+        "actboy168.tasks"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.trimTrailingWhitespace": true
+      }
+    }
+  },
+
+  "postCreateCommand": "true",
+  "postStartCommand": "echo 'Devcontainer started. App at http://localhost:8080'"
+}
