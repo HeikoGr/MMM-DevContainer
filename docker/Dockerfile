@@ -45,5 +45,5 @@ EXPOSE 8080
 # Simple healthcheck to verify that MagicMirror responds on port 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD curl -fsS http://localhost:8080 >/dev/null || exit 1
 
-# Run initialization and PM2
-ENTRYPOINT ["/bin/sh", "-c", "/entrypoint.sh && pm2-runtime start /opt/magic_mirror/ecosystem.config.js"]
+# Run initialization and PM2 via the entrypoint script (script will exec pm2-runtime)
+ENTRYPOINT ["/entrypoint.sh"]

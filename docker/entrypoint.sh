@@ -40,3 +40,7 @@ fi
 # MagicMirror starten
 cd "$MAGICMIRROR_PATH"
 echo "${GREEN}Starting MagicMirror under PM2...${NC}"
+
+# Finally start the application under pm2-runtime. Use exec so PID 1 is pm2-runtime
+# which makes signal handling and process lifetime behave correctly inside containers.
+exec pm2-runtime start /opt/magic_mirror/ecosystem.config.js

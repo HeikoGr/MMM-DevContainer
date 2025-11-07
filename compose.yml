@@ -14,10 +14,10 @@ services:
       - ./modules:/opt/magic_mirror/workspace/modules
       - ./config.js:/opt/magic_mirror/workspace/config.js
       - ./custom.css:/opt/magic_mirror/workspace/custom.css
-    networks:
-      - magicmirror_net
+    #networks:
+    #  - magicmirror_net
 
-networks:
-  magicmirror_net:
-    driver: bridge
+#networks:
+#  magicmirror_net:
+#    driver: bridge
 

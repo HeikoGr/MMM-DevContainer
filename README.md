@@ -7,7 +7,8 @@ This README explains how to use the project in Visual Studio Code for module dev
 
 ## Prerequisites
 
-- Docker and Docker Compose (or Docker Compose V2 via `docker compose`).
+- Linux: Docker and Docker Compose.
+- Windows: WSL2 and Docker Desktop
 - Visual Studio Code with the "Remote - Containers" (Dev Containers) extension installed.
 - (Optional) VS Code Docker extension for an integrated GUI to manage containers.
 
