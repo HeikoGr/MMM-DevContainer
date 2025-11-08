@@ -4,7 +4,7 @@
     {
       "label": "pm2: restart all",
       "type": "shell",
-  "command": "docker exec -it ${DOCKER_CONTAINER_NAME:-magicmirror-dev} pm2 restart all",
+      "command": "docker exec -it magicmirror-dev pm2 restart all",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -22,7 +22,7 @@
     {
       "label": "pm2: stop all",
       "type": "shell",
-  "command": "docker exec -it ${DOCKER_CONTAINER_NAME:-magicmirror-dev} pm2 stop all",
+      "command": "docker exec -it magicmirror-dev pm2 stop all",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -40,7 +40,7 @@
     {
       "label": "pm2: list",
       "type": "shell",
-  "command": "docker exec -it ${DOCKER_CONTAINER_NAME:-magicmirror-dev} pm2 list",
+      "command": "docker exec -it magicmirror-dev pm2 list",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -58,7 +58,7 @@
     {
       "label": "pm2: logs (follow)",
       "type": "shell",
-  "command": "docker exec -it ${DOCKER_CONTAINER_NAME:-magicmirror-dev} pm2 logs --lines 200",
+      "command": "docker exec -it magicmirror-dev pm2 logs --lines 200",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -74,12 +74,11 @@
         }
       },
       "problemMatcher": []
-    }
-    ,
+    },
     {
       "label": "npm: install all",
       "type": "shell",
-  "command": "find ./modules -type f -name \"package.json\" -not -path \"*/node_modules/*\" -execdir npm install \\;",
+      "command": "docker exec -it magicmirror-dev sh -lc 'find . -type f -name \"package.json\" -not -path \"*/node_modules/*\" -execdir npm install \\;'",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -89,7 +88,7 @@
       "options": {
         "statusbar": {
           "label": "$(eye) npm i all",
-          "color": "#4CAF50",
+          "color": "#ffe600",
           "detail": "npm: install all"
         }
       },
