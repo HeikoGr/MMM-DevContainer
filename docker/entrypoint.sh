@@ -31,7 +31,7 @@ if [ -d "${MAGICMIRROR_PATH}/modules" ]; then
 		if [ -f "$MOD/package.json" ]; then
 			if [ ! -d "$MOD/node_modules" ] || [ -z "$(ls -A "$MOD/node_modules" 2>/dev/null)" ]; then
 				echo "${YELLOW}Installing module dependencies in $(basename "$MOD")...${NC}"
-				npm --prefix "$MOD" install --omit=dev || true
+				npm --prefix "$MOD" install || true
 			fi
 		fi
 	done

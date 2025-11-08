@@ -17,13 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN update-ca-certificates
 
 # Install pm2 globally VOR dem Cloning
-RUN npm install -g pm2
+RUN npm install -g pm2 prettier cspell @eslint/css @eslint/json
 
 # Clone MagicMirror
-RUN git clone https://github.com/MagicMirrorOrg/MagicMirror.git . && \
+RUN git clone --depth=1 https://github.com/MagicMirrorOrg/MagicMirror.git . && \
     npm install --only=prod && \
-    npm install -g --save-dev --save-exact prettier && \
-    npm install -g --save-dev --save-exact cspell@latest
+    npm cache clean --force
 
 RUN mv modules __modules && \
     mv config __config && \
