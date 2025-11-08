@@ -1,0 +1,7 @@
+# Ignore all module folders and their contents (custom modules, node_modules inside modules, etc.)
+# Use a trailing slash so Git treats this as a directory path and ignores everything under it.
+modules/
+
+# If you ever want to keep an empty placeholder file in the modules folder (e.g. .gitkeep),
+# add a negation rule like:
+# !modules/.gitkeep
