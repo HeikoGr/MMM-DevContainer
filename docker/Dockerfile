@@ -22,7 +22,8 @@ RUN npm install -g pm2 prettier cspell @eslint/css @eslint/json
 # Clone MagicMirror
 RUN git clone --depth=1 https://github.com/MagicMirrorOrg/MagicMirror.git . && \
     npm install --only=prod && \
-    npm cache clean --force
+    npm cache clean --force && \
+    rm -rf /opt/magic_mirror/.git
 
 RUN mv modules __modules && \
     mv config __config && \

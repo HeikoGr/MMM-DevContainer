@@ -12,7 +12,6 @@
     "DOCKER_CONTAINER_NAME": "magicmirror-dev"
   },
 
-  "forwardPorts": [8080],
   "portsAttributes": {
     "8080": {
       "label": "MagicMirror",
