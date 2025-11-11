@@ -5,6 +5,8 @@ set -e
 MAGICMIRROR_PATH="/opt/magic_mirror"
 CUSTOM_MODULES_DIR="${MAGICMIRROR_PATH}/modules/custom"
 
+git config --global alias.pr '!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f'
+
 # Farben für Output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

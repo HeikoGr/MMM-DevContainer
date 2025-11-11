@@ -5,6 +5,10 @@ This repository contains a development setup for MagicMirror using Docker Compos
 
 This README explains how to use the project in Visual Studio Code for module development (working in the `modules` folder), how to mount `css` and `config`, and how to run/manage the server via Docker Compose or the Dev Container.
 
+## WARNING / TODO
+- This DevContainer does not work reliably on windows / WSL2.
+- git username / email will always get lost after every rebuild
+
 ## Prerequisites
 
 - Linux: Docker and Docker Compose.
