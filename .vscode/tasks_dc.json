@@ -58,7 +58,7 @@
     {
       "label": "pm2: logs (follow)",
       "type": "shell",
-      "command": "pm2 logs --lines 200",
+      "command": "pm2 flush && pm2 logs --lines 200",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -78,7 +78,7 @@
     {
       "label": "npm: install all",
       "type": "shell",
-      "command": "find ./modules -type f -name \"package.json\" -not -path \"*/node_modules/*\" -execdir npm install \\;",
+      "command": "find ./modules -type f -name \"package.json\" -not -path \"*/node_modules/*\" -execdir npm install --omit=dev \\;",
       "presentation": {
         "echo": true,
         "reveal": "always",

@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN update-ca-certificates
 
 # Install pm2 globally VOR dem Cloning
-RUN npm install -g pm2 prettier cspell @eslint/css @eslint/json
+RUN npm install -g pm2
 
 # Clone MagicMirror
 RUN git clone --depth=1 https://github.com/MagicMirrorOrg/MagicMirror.git . && \
@@ -31,10 +31,17 @@ RUN mv modules __modules && \
     mkdir __css && \
     cp -r css/* __css/
 
+WORKDIR /opt/magic_mirror/workspace
+# Install development dependencies in workspace
+RUN npm install eslint eslint-plugin-n prettier cspell @eslint/css @eslint/js @eslint/json prettier-plugin-jinja-template @stylistic/eslint-plugin 
+
+WORKDIR /opt/magic_mirror
+
 # Copy configuration and startup files
 COPY ./docker/ecosystem.config.js ./ecosystem.config.js
+COPY ./.env ./.env
 COPY ./docker/entrypoint.sh /entrypoint.sh
-COPY ./.vscode/tasks_dc.json /opt/magic_mirror/workspace/.vscode/tasks.json
+# COPY ./.vscode/tasks_dc.json /opt/magic_mirror/workspace/.vscode/tasks.json
 
 # Make scripts executable
 RUN chmod +x /entrypoint.sh

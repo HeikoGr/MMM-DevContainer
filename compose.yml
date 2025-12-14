@@ -9,6 +9,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - .vscode/tasks_dc.json:/opt/magic_mirror/workspace/.vscode/tasks.json
       - ./config.js:/opt/magic_mirror/config/config.js
       - ./custom.css:/opt/magic_mirror/css/custom.css
       - ./modules:/opt/magic_mirror/modules
