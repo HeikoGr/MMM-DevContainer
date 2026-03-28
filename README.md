@@ -34,9 +34,9 @@ The entrypoint of the container will automatically attempt to install production
 
 This repository now contains a shared base image definition at `docker/Dockerfile.base`.
 
-- Published image: `ghcr.io/heikogr/mmm-devcontainer-base:playwright-node24`
+- Published image: `ghcr.io/heikogr/mmm-devcontainer-base:node24-trixie-slim`
 - Registry workflow: `.github/workflows/publish-base-image.yml`
-- Purpose: provide the heavy shared layers once, including Node 24, MagicMirror, Playwright, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
+- Purpose: provide the shared development layers once, including Node 24 on Debian Trixie Slim, MagicMirror, Playwright MCP, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
 
 Module repositories such as `MMM-CalDAV-Tasks`, `MMM-HomeConnect2`, `MMM-Photoprism2` and `MMM-Webuntis` should use thin Dockerfiles that inherit from this base image and only add their repo-specific scripts or extra packages.
 
@@ -91,7 +91,7 @@ Two extensions are configured to show task buttons in the status bar and provide
 - Container name: `compose.yml` sets `container_name: magicmirror-dev`. If you change that name, update the tasks or use an environment variable to keep tasks working.
 - If a task runs on the host but Docker is not running / the container is not started, the `docker exec` will fail — start the container first.
 - The entrypoint script creates symlinks and installs module dependencies if required. If a module needs build tools, ensure the container has the necessary tools (look at `docker/Dockerfile`).
-- Node version: the image uses Node 22 by default; if you experience compatibility issues you can switch the base image in `docker/Dockerfile` to a supported Node LTS (for example `node:20-bookworm-slim`).
+- Node version: the shared base image uses Node 24 on `node:24-trixie-slim`.
 
 ## 6) Useful commands (quick reference)
 

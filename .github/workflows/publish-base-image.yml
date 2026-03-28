@@ -42,7 +42,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=raw,value=playwright-node24
+            type=raw,value=node24-trixie-slim
             type=sha,prefix=sha-
 
       - name: Build and push
