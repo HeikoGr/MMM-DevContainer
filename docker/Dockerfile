@@ -20,10 +20,10 @@ RUN update-ca-certificates
 RUN npm install -g pm2
 
 # Clone MagicMirror
-RUN git clone https://github.com/MagicMirrorOrg/MagicMirror.git . && \
+RUN git clone --depth=1 https://github.com/MagicMirrorOrg/MagicMirror.git . && \
     npm install --only=prod && \
-    npm install -g --save-dev --save-exact prettier && \
-    npm install -g --save-dev --save-exact cspell@latest
+    npm cache clean --force && \
+    rm -rf /opt/magic_mirror/.git
 
 RUN mv modules __modules && \
     mv config __config && \
@@ -31,10 +31,17 @@ RUN mv modules __modules && \
     mkdir __css && \
     cp -r css/* __css/
 
+WORKDIR /opt/magic_mirror/workspace
+# Install development dependencies in workspace
+RUN npm install eslint eslint-plugin-n prettier cspell @eslint/css @eslint/js @eslint/json prettier-plugin-jinja-template @stylistic/eslint-plugin 
+
+WORKDIR /opt/magic_mirror
+
 # Copy configuration and startup files
 COPY ./docker/ecosystem.config.js ./ecosystem.config.js
+COPY ./.env ./.env
 COPY ./docker/entrypoint.sh /entrypoint.sh
-COPY ./.vscode/tasks_dc.json /opt/magic_mirror/workspace/.vscode/tasks.json
+# COPY ./.vscode/tasks_dc.json /opt/magic_mirror/workspace/.vscode/tasks.json
 
 # Make scripts executable
 RUN chmod +x /entrypoint.sh
@@ -45,5 +52,5 @@ EXPOSE 8080
 # Simple healthcheck to verify that MagicMirror responds on port 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD curl -fsS http://localhost:8080 >/dev/null || exit 1
 
-# Run initialization and PM2
-ENTRYPOINT ["/bin/sh", "-c", "/entrypoint.sh && pm2-runtime start /opt/magic_mirror/ecosystem.config.js"]
+# Run initialization and PM2 via the entrypoint script (script will exec pm2-runtime)
+ENTRYPOINT ["/entrypoint.sh"]

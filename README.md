@@ -7,9 +7,14 @@ It also publishes a shared DevContainer base image for module repositories via G
 
 This README explains how to use the project in Visual Studio Code for module development (working in the `modules` folder), how to mount `css` and `config`, and how to run/manage the server via Docker Compose or the Dev Container.
 
+## WARNING / TODO
+- This DevContainer does not work reliably on windows / WSL2.
+- git username / email will always get lost after every rebuild
+
 ## Prerequisites
 
-- Docker and Docker Compose (or Docker Compose V2 via `docker compose`).
+- Linux: Docker and Docker Compose.
+- Windows: WSL2 and Docker Desktop
 - Visual Studio Code with the "Remote - Containers" (Dev Containers) extension installed.
 - (Optional) VS Code Docker extension for an integrated GUI to manage containers.
 

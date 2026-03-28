@@ -58,7 +58,7 @@
     {
       "label": "pm2: logs (follow)",
       "type": "shell",
-      "command": "pm2 logs --lines 200",
+      "command": "pm2 flush && pm2 logs --lines 200",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -71,6 +71,25 @@
           "label": "$(eye) Logs",
           "color": "#4CAF50",
           "detail": "Follow PM2 logs"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: install all",
+      "type": "shell",
+      "command": "find ./modules -type f -name \"package.json\" -not -path \"*/node_modules/*\" -execdir npm install --omit=dev \\;",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "isBackground": false,
+      "options": {
+        "statusbar": {
+          "label": "$(eye) npm i all",
+          "color": "#ffe600",
+          "detail": "npm: install all"
         }
       },
       "problemMatcher": []
