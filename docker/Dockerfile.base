@@ -10,11 +10,13 @@ WORKDIR /opt/magic_mirror
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
+    jq \
     ripgrep \
     python3 \
     ca-certificates \
     build-essential \
     gnupg \
+    httpie \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - && \
@@ -32,7 +34,11 @@ RUN update-ca-certificates
 WORKDIR /opt/magic_mirror/modules
 
 RUN git clone --depth=1 https://github.com/uxigene/MMM-Cursor && \
-    if [ -f /opt/magic_mirror/modules/MMM-Cursor/package.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor install --omit=dev --no-audit --no-fund; fi
+    if [ -f /opt/magic_mirror/modules/MMM-Cursor/package.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor install --omit=dev --no-audit --no-fund; fi && \
+    git clone --depth=1 https://github.com/shbatm/MMM-Carousel.git && \
+    npm --prefix /opt/magic_mirror/modules/MMM-Carousel install --no-audit --no-fund && \
+    git clone --depth=1 https://github.com/shbatm/MMM-KeyBindings.git && \
+    npm --prefix /opt/magic_mirror/modules/MMM-KeyBindings install --no-audit --no-fund
 
 WORKDIR /opt/magic_mirror
 
