@@ -1,0 +1,52 @@
+FROM mcr.microsoft.com/playwright:v1.58.2-noble
+
+ARG NODE_MAJOR=24
+ARG PLAYWRIGHT_VERSION=1.58.2
+ARG MAGICMIRROR_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror.git
+ARG MAGICMIRROR_REPO_REF=master
+
+WORKDIR /opt/magic_mirror
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ripgrep \
+    python3 \
+    ca-certificates \
+    build-essential \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - && \
+    apt-get update && apt-get install -y --no-install-recommends nodejs && \
+    npm install -g npm@11 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth=1 --branch "${MAGICMIRROR_REPO_REF}" "${MAGICMIRROR_REPO_URL}" . && \
+    npm install --omit=dev --no-audit --no-fund && \
+    npm cache clean --force && \
+    rm -rf /opt/magic_mirror/.git
+
+RUN update-ca-certificates
+
+WORKDIR /opt/magic_mirror/modules
+
+RUN git clone --depth=1 https://github.com/uxigene/MMM-Cursor && \
+    if [ -f /opt/magic_mirror/modules/MMM-Cursor/package.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor install --omit=dev --no-audit --no-fund; fi
+
+WORKDIR /opt/magic_mirror
+
+RUN npm install -g \
+    pm2 \
+    eslint \
+    eslint-plugin-n \
+    prettier \
+    cspell \
+    @eslint/css \
+    @eslint/js \
+    @eslint/json \
+    prettier-plugin-jinja-template \
+    @stylistic/eslint-plugin && \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install -g "playwright@${PLAYWRIGHT_VERSION}" @playwright/mcp && \
+    playwright install chrome && \
+    npm cache clean --force

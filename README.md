@@ -3,6 +3,8 @@
 
 This repository contains a development setup for MagicMirror using Docker Compose and a VS Code Dev Container.
 
+It also publishes a shared DevContainer base image for module repositories via GHCR.
+
 This README explains how to use the project in Visual Studio Code for module development (working in the `modules` folder), how to mount `css` and `config`, and how to run/manage the server via Docker Compose or the Dev Container.
 
 ## Prerequisites
@@ -22,6 +24,16 @@ git clone https://github.com/HeikoGr/MMM-Webuntis.git modules/MMM-Webuntis
 You can add any number of modules under `modules/` and they will be mounted into the container at `/opt/magic_mirror/modules`.
 
 The entrypoint of the container will automatically attempt to install production dependencies for modules that contain a `package.json` (so dependencies like `webuntis` used by `MMM-Webuntis` will be installed inside the container when it starts).
+
+## Shared Base Image
+
+This repository now contains a shared base image definition at `docker/Dockerfile.base`.
+
+- Published image: `ghcr.io/heikogr/mmm-devcontainer-base:playwright-node24`
+- Registry workflow: `.github/workflows/publish-base-image.yml`
+- Purpose: provide the heavy shared layers once, including Node 24, MagicMirror, Playwright, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
+
+Module repositories such as `MMM-CalDAV-Tasks`, `MMM-HomeConnect2`, `MMM-Photoprism2` and `MMM-Webuntis` should use thin Dockerfiles that inherit from this base image and only add their repo-specific scripts or extra packages.
 
 ## 2) Open the project in VS Code
 
