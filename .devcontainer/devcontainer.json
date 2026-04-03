@@ -3,7 +3,7 @@
   "dockerComposeFile": "../compose.yml",
   "service": "magicmirror",
   "runServices": ["magicmirror"],
-  "workspaceFolder": "/opt/magic_mirror/workspace",
+  "workspaceFolder": "/opt/magic_mirror/",
   "overrideCommand": false,
   "shutdownAction": "stopCompose",
   "remoteUser": "root",

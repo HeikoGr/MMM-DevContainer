@@ -5,7 +5,7 @@ This repository contains a development setup for MagicMirror using Docker Compos
 
 It also publishes a shared DevContainer base image for module repositories via GHCR.
 
-This README explains how to use the project in Visual Studio Code for module development (working in the `modules` folder), how to mount `css` and `config`, and how to run/manage the server via Docker Compose or the Dev Container.
+This README explains how to use the project in Visual Studio Code for module development, how the image is assembled, and how to run/manage the server via Docker Compose or the Dev Container.
 
 ## WARNING / TODO
 - This DevContainer does not work reliably on windows / WSL2.
@@ -32,11 +32,11 @@ The entrypoint of the container will automatically attempt to install production
 
 ## Shared Base Image
 
-This repository now contains a shared base image definition at `docker/Dockerfile.base`.
+This repository now contains a shared image definition at `docker/Dockerfile`.
 
-- Published image: `ghcr.io/heikogr/mmm-devcontainer-base:node24-trixie-slim`
-- Registry workflow: `.github/workflows/publish-base-image.yml`
-- Purpose: provide the shared development layers once, including Node 24 on Debian Trixie Slim, MagicMirror, Playwright MCP, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
+- Published image: `ghcr.io/heikogr/mmm-devcontainer:node24-trixie-slim`
+- Registry workflow: `.github/workflows/publish-image.yml`
+- Purpose: provide the shared development layers once, including Node 24 on Debian Trixie Slim, MagicMirror v2.35.0, Playwright MCP, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
 
 Module repositories such as `MMM-CalDAV-Tasks`, `MMM-HomeConnect2`, `MMM-Photoprism2` and `MMM-Webuntis` should use thin Dockerfiles that inherit from this base image and only add their repo-specific scripts or extra packages.
 
@@ -47,7 +47,7 @@ Recommended workflow (Dev Container):
 1. From the Command Palette (Ctrl+Shift+P) select **Dev Containers: Reopen in Container**. VS Code will build the container (using `compose.yml`), install the recommended extensions, and open the workspace inside the container.
 
 Notes:
-- The Dev Container uses the Compose service declared in `compose.yml`. The container is configured to expose port `8080` and mount the workspace folders.
+- The Dev Container uses the Compose service declared in `compose.yml`. The container exposes port `8080`, while the repository itself is mounted by VS Code at the default `/workspaces/...` location for editing.
 
 ## 3) Starting and stopping (two approaches)
 
@@ -90,8 +90,9 @@ Two extensions are configured to show task buttons in the status bar and provide
 
 - Container name: `compose.yml` sets `container_name: magicmirror-dev`. If you change that name, update the tasks or use an environment variable to keep tasks working.
 - If a task runs on the host but Docker is not running / the container is not started, the `docker exec` will fail — start the container first.
-- The entrypoint script creates symlinks and installs module dependencies if required. If a module needs build tools, ensure the container has the necessary tools (look at `docker/Dockerfile`).
+- The entrypoint script installs module dependencies if required. If a module needs build tools, ensure the container has the necessary tools (look at `docker/Dockerfile`).
 - Node version: the shared base image uses Node 24 on `node:24-trixie-slim`.
+- MagicMirror v2.35.0 moved `custom.css` from `css/custom.css` to `config/custom.css` and default modules from `modules/default` to `defaultmodules`. This repo now bakes `config.js`, `custom.css`, and any checked-in `modules/` content directly into the image.
 
 ## 6) Useful commands (quick reference)
 

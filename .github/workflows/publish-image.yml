@@ -5,13 +5,13 @@ on:
     branches:
       - main
     paths:
-      - docker/Dockerfile.base
-      - .github/workflows/publish-base-image.yml
+      - docker/Dockerfile
+      - .github/workflows/publish-image.yml
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: heikogr/mmm-devcontainer-base
+  IMAGE_NAME: heikogr/mmm-devcontainer
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: docker/Dockerfile.base
+          file: docker/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
