@@ -3,9 +3,14 @@ FROM node:24-trixie-slim
 ARG PLAYWRIGHT_VERSION=1.59
 ARG MAGICMIRROR_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror.git
 ARG MAGICMIRROR_REPO_REF=v2.35.0
+ARG MM_CHECKER_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git
+ARG MM_CHECKER_REPO_REF=main
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV MAGICMIRROR_CHECKER_REPO=/opt/mm-module-checker
+ENV MAGICMIRROR_CHECKER_REPO_REF=${MM_CHECKER_REPO_REF}
+ENV MAGICMIRROR_SHARED_CHECK_SCRIPT=/opt/mm-tools/magicmirror-check.mjs
 
 WORKDIR /opt/magic_mirror
 
@@ -90,6 +95,14 @@ RUN npm install -g \
     "playwright@${PLAYWRIGHT_VERSION}" \
     @playwright/mcp && \
     npm cache clean --force
+
+RUN git clone --depth=1 --branch "${MM_CHECKER_REPO_REF}" "${MM_CHECKER_REPO_URL}" "${MAGICMIRROR_CHECKER_REPO}" && \
+    npm --prefix "${MAGICMIRROR_CHECKER_REPO}" install --no-audit --no-fund && \
+    npm cache clean --force
+
+COPY ./docker/scripts/magicmirror-check.mjs /opt/mm-tools/magicmirror-check.mjs
+
+RUN chmod +x /opt/mm-tools/magicmirror-check.mjs
 
 COPY ./docker/ecosystem.config.js /opt/magic_mirror/ecosystem.config.js
 COPY ./docker/entrypoint.sh /entrypoint.sh

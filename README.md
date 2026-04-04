@@ -7,6 +7,8 @@ It also publishes a shared DevContainer base image for module repositories via G
 
 This README explains how to use the project in Visual Studio Code for module development, how the image is assembled, and how to run/manage the server via Docker Compose or the Dev Container.
 
+Additional supplementary documentation should live in [docs/README.md](docs/README.md).
+
 ## WARNING / TODO
 - This DevContainer does not work reliably on windows / WSL2.
 - git username / email will always get lost after every rebuild
