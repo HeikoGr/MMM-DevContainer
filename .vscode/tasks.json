@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "pm2: restart all",
+      "label": "devcontainer: force rebuild local base image",
       "type": "shell",
-      "command": "docker exec -it magicmirror-dev pm2 restart all",
+      "command": "bash scripts/local-devcontainer-test.sh build-base --force",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -12,17 +12,17 @@
       },
       "options": {
         "statusbar": {
-          "label": "$(sync) Restart",
-          "color": "#FF9800",
-          "detail": "Restart all PM2 processes"
+          "label": "$(package) Base force",
+          "color": "#7E57C2",
+          "detail": "Force-rebuild the local shared MMM devcontainer base image"
         }
       },
       "problemMatcher": []
     },
     {
-      "label": "pm2: stop all",
+      "label": "devcontainer: run local module checker",
       "type": "shell",
-      "command": "docker exec -it magicmirror-dev pm2 stop all",
+      "command": "bash scripts/local-devcontainer-test.sh run-check ${input:localTestModule}",
       "presentation": {
         "echo": true,
         "reveal": "always",
@@ -30,69 +30,83 @@
       },
       "options": {
         "statusbar": {
-          "label": "$(debug-disconnect) Stop",
-          "color": "#E53935",
-          "detail": "Stop all PM2 processes"
+          "label": "$(beaker) Module check",
+          "color": "#42A5F5",
+          "detail": "Run the selected module checker and build the image first when needed"
         }
       },
       "problemMatcher": []
     },
     {
-      "label": "pm2: list",
+      "label": "devcontainer: full local module checker test",
       "type": "shell",
-      "command": "docker exec -it magicmirror-dev pm2 list",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "options": {
-        "statusbar": {
-          "label": "$(list-unordered) List",
-          "color": "#2196F3",
-          "detail": "Show PM2 process list"
-        }
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "pm2: logs (follow)",
-      "type": "shell",
-      "command": "docker exec -it magicmirror-dev pm2 logs --lines 200",
+      "command": "bash scripts/local-devcontainer-test.sh full-test ${input:localTestModule}",
       "presentation": {
         "echo": true,
         "reveal": "always",
         "panel": "shared",
         "focus": true
       },
-      "isBackground": false,
       "options": {
         "statusbar": {
-          "label": "$(eye) Logs",
-          "color": "#4CAF50",
-          "detail": "Follow PM2 logs"
+          "label": "$(rocket) Full test",
+          "color": "#66BB6A",
+          "detail": "Build base, rebuild the module image, and run the selected module checker"
         }
       },
       "problemMatcher": []
     },
     {
-      "label": "npm: install all",
+      "label": "devcontainer: open module in new window",
       "type": "shell",
-      "command": "docker exec -it magicmirror-dev sh -lc 'find . -type f -name \"package.json\" -not -path \"*/node_modules/*\" -execdir npm install \\;'",
+      "command": "bash scripts/local-devcontainer-test.sh open-module ${input:localTestModule}",
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "panel": "shared"
+        "panel": "shared",
+        "focus": true
       },
-      "isBackground": false,
       "options": {
         "statusbar": {
-          "label": "$(eye) npm i all",
-          "color": "#ffe600",
-          "detail": "npm: install all"
+          "label": "$(window) Open module",
+          "color": "#29B6F6",
+          "detail": "Open the selected module in a new VS Code window and use the local base image"
         }
       },
       "problemMatcher": []
+    },
+    {
+      "label": "devcontainer: build base + open module",
+      "type": "shell",
+      "command": "bash scripts/local-devcontainer-test.sh full-open ${input:localTestModule}",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "options": {
+        "statusbar": {
+          "label": "$(play-circle) Build+Open",
+          "color": "#26C6DA",
+          "detail": "Build the local base image and open the selected module in a new VS Code window"
+        }
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "localTestModule",
+      "type": "pickString",
+      "description": "Select the module to build/test with the local base image",
+      "options": [
+        "MMM-Webuntis",
+        "MMM-HomeConnect2",
+        "MMM-Photoprism2",
+        "MMM-CalDAV-Tasks"
+      ],
+      "default": "MMM-Webuntis"
     }
   ]
 }
