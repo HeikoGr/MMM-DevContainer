@@ -633,7 +633,7 @@ async function parseCheckerResults(checkerRepo, validModules) {
 function displayResults(allResults) {
   const resultTitle = allResults.length === 1 ? `Module Check Result: ${allResults[0].name}` : `Module Check Results: ${allResults.length} modules checked`;
 
-  console.log(`\n${'='.repeat(80)}`);
+  console.log(`${'='.repeat(80)}`);
   console.log(resultTitle);
   console.log('='.repeat(80));
 
@@ -841,7 +841,19 @@ async function main() {
     await runChecker(checkerRepo, moduleDataArray, validModules);
 
     const allResults = await parseCheckerResults(checkerRepo, validModules);
-    const { cleanModules, modulesWithIssues, totalIssues } = displayResults(allResults);
+    const cleanModules = [];
+    const modulesWithIssues = [];
+    let totalIssues = 0;
+
+    for (const result of allResults) {
+      if (result.issues.length > 0) {
+        totalIssues += result.issues.length;
+        modulesWithIssues.push(result);
+      } else {
+        cleanModules.push(result);
+      }
+    }
+
     const resultsDir = determineResultsDirectory(modulesRoot, cliConfig.cliOutputDir, cliConfig.filterMode, currentModuleDir, cliConfig.specificModules, validModules);
     const resultsPath = await writeResultsFile(resultsDir, modulesRoot, allResults, cleanModules, modulesWithIssues, totalIssues);
 
@@ -859,8 +871,10 @@ async function main() {
         console.log('✅ Cleanup complete\n');
       }
     } else {
-      console.log('💡 Tip: Use --cleanup to remove temporary checker files after check\n');
+      console.log('💡 Tip: Use --cleanup to remove temporary checker files after check');
     }
+
+    displayResults(allResults);
   } catch (error) {
     console.error('❌ Error:', error.message);
     if (error.stderr) console.error(error.stderr);

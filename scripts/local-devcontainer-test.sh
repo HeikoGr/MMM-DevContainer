@@ -40,6 +40,10 @@ has_command() {
   command -v "$1" >/dev/null 2>&1
 }
 
+has_devcontainer_open() {
+  has_command devcontainer && devcontainer --help 2>/dev/null | grep -q '^  devcontainer open'
+}
+
 module_dir() {
   local module_name="$1"
   local dir="$WORKSPACE_ROOT/$module_name"
@@ -92,12 +96,20 @@ build_base() {
 
 build_module() {
   local module_name="$1"
-  local module_path image_tag
+  local module_path image_tag base_image_id
   module_path="$(module_dir "$module_name")"
   image_tag="$(module_image_tag "$module_name")"
+  base_image_id="$(docker image inspect --format '{{.Id}}' "$BASE_IMAGE_TAG" 2>/dev/null)"
+
+  [[ -n "$base_image_id" ]] || fail "Could not determine image ID for base image: $BASE_IMAGE_TAG"
 
   echo "==> Building module image for $module_name as $image_tag"
-  docker build -f "$module_path/.devcontainer/Dockerfile" -t "$image_tag" "$module_path/.devcontainer"
+  docker build \
+    --label "mmm.devcontainer.base-image=$BASE_IMAGE_TAG" \
+    --label "mmm.devcontainer.base-image-id=$base_image_id" \
+    -f "$module_path/.devcontainer/Dockerfile" \
+    -t "$image_tag" \
+    "$module_path/.devcontainer"
 }
 
 ensure_base_image() {
@@ -111,16 +123,32 @@ ensure_base_image() {
 
 ensure_module_image() {
   local module_name="$1"
-  local image_tag
+  local image_tag current_base_image_id recorded_base_image_id
   image_tag="$(module_image_tag "$module_name")"
 
-  if docker image inspect "$image_tag" >/dev/null 2>&1; then
+  ensure_base_image
+
+  current_base_image_id="$(docker image inspect --format '{{.Id}}' "$BASE_IMAGE_TAG" 2>/dev/null)"
+  [[ -n "$current_base_image_id" ]] || fail "Could not determine image ID for base image: $BASE_IMAGE_TAG"
+
+  if ! docker image inspect "$image_tag" >/dev/null 2>&1; then
+    echo "==> Local module image not found for $module_name, building it first"
+    build_module "$module_name"
     return
   fi
 
-  echo "==> Local module image not found for $module_name, building it first"
-  ensure_base_image
-  build_module "$module_name"
+  recorded_base_image_id="$(docker image inspect --format '{{index .Config.Labels "mmm.devcontainer.base-image-id"}}' "$image_tag" 2>/dev/null || true)"
+
+  if [[ -z "$recorded_base_image_id" ]]; then
+    echo "==> Local module image for $module_name has no recorded base image metadata, rebuilding it"
+    build_module "$module_name"
+    return
+  fi
+
+  if [[ "$recorded_base_image_id" != "$current_base_image_id" ]]; then
+    echo "==> Local module image for $module_name is based on an outdated base image, rebuilding it"
+    build_module "$module_name"
+  fi
 }
 
 run_check() {
@@ -154,12 +182,19 @@ open_module() {
   module_path="$(module_dir "$module_name")"
 
   if has_command devcontainer; then
-    echo "==> Opening $module_name in a new VS Code window via devcontainer CLI"
-    devcontainer open --workspace-folder "$module_path" --new-window
-    return
+    echo "==> Starting devcontainer for $module_name via devcontainer CLI"
+    devcontainer up --workspace-folder "$module_path"
+
+    if has_devcontainer_open; then
+      echo "==> Opening $module_name in a new VS Code window via devcontainer CLI"
+      devcontainer open --workspace-folder "$module_path" --new-window
+      return
+    fi
+
+    echo "==> Installed devcontainer CLI does not support 'open'; falling back to VS Code"
   fi
 
-  has_command code || fail "Neither devcontainer CLI nor code CLI is available"
+  has_command code || fail "No usable opener found. Install the VS Code devcontainer CLI with 'Dev Containers: Install devcontainer CLI' or ensure the code CLI is available."
 
   echo "==> Opening $module_name in a new VS Code window"
   code -n "$module_path"
@@ -170,9 +205,15 @@ Opened $module_name in a new VS Code window.
 The local base image is already available under:
   $BASE_IMAGE_TAG
 
-Because the devcontainer CLI is not installed on this host, the container was not auto-started.
-In the new window run:
+The container may already be running, but automatic attach is only possible when the VS Code-provided devcontainer CLI supports:
+  devcontainer open
+
+In the new window run one of these commands:
   Dev Containers: Reopen in Container
+  Dev Containers: Attach to Running Container
+
+If you want this script to start and open the devcontainer automatically, install it once via:
+  Dev Containers: Install devcontainer CLI
 
 The module's Dockerfile still points to:
   $BASE_IMAGE_TAG
