@@ -1,7 +1,7 @@
 # MMM-DevContainer Documentation
 
-Die zentrale Benutzer- und Projektbeschreibung steht in [../README.md](../README.md). Dieses Verzeichnis ist der vorgesehene Ort fuer zusaetzliche Infrastruktur- und Betriebsdokumentation, falls sie ueber die Root-README hinauswaechst.
+The main user and project description is in [../README.md](../README.md). This directory is the intended place for additional infrastructure and operations documentation if it outgrows the root README.
 
-## Aktueller Stand
+## Current Status
 
-- Zurzeit ist die Root-README die kanonische Dokumentation fuer Setup, Basis-Image und Compose-Nutzung.
+- At the moment, the root README is the canonical documentation for setup, base image, and compose usage.

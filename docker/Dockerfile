@@ -57,7 +57,7 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt-get update && apt-get install -y --no-install-recommends google-chrome-stable && \
     rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g npm@11 && \
+RUN npm install -g npm@11 npm-check-updates && \
     npm cache clean --force
 
 RUN git clone --depth=1 --branch "${MAGICMIRROR_REPO_REF}" "${MAGICMIRROR_REPO_URL}" . && \
@@ -71,6 +71,14 @@ COPY ./custom.css /opt/magic_mirror/config/custom.css
 RUN update-ca-certificates
 
 WORKDIR /opt/magic_mirror/modules
+
+# npx does not reliably reuse globally installed packages from mounted module directories.
+# Provide npm-check-updates as a parent dependency so `npx npm-check-updates`
+# resolves without an interactive install prompt inside /opt/magic_mirror/modules/<module>.
+COPY ./docker/shared-tools.package.json /opt/magic_mirror/modules/package.json
+
+RUN npm --prefix /opt/magic_mirror/modules install --omit=dev --no-audit --no-fund && \
+    npm cache clean --force
 
 RUN git clone --depth=1 https://github.com/uxigene/MMM-Cursor && \
     if [ -f /opt/magic_mirror/modules/MMM-Cursor/package.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor install --omit=dev --no-audit --no-fund; fi && \
