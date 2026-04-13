@@ -1,8 +1,0 @@
-{
-  "name": "mmm-devcontainer-shared-tools",
-  "private": true,
-  "description": "Shared CLI tools made available to mounted MagicMirror modules inside the devcontainer base image.",
-  "dependencies": {
-    "npm-check-updates": "^20.0.1"
-  }
-}

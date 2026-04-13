@@ -1,3 +1,4 @@
+## syntax=docker/dockerfile:1.7
 FROM node:24-trixie-slim
 
 ARG PLAYWRIGHT_VERSION=1.59
@@ -14,7 +15,9 @@ ENV MAGICMIRROR_SHARED_CHECK_SCRIPT=/opt/mm-tools/magicmirror-check.mjs
 
 WORKDIR /opt/magic_mirror
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     wget \
@@ -51,17 +54,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /etc/apt/keyrings && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    mkdir -p /etc/apt/keyrings && \
     wget -qO- https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-linux.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/google-linux.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && apt-get install -y --no-install-recommends google-chrome-stable && \
     rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g npm@11 npm-check-updates && \
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -g npm@11 && \
     npm cache clean --force
 
-RUN git clone --depth=1 --branch "${MAGICMIRROR_REPO_REF}" "${MAGICMIRROR_REPO_URL}" . && \
-    npm install --omit=dev --no-audit --no-fund && \
+RUN --mount=type=cache,target=/root/.npm \
+    git clone --depth=1 --branch "${MAGICMIRROR_REPO_REF}" "${MAGICMIRROR_REPO_URL}" . && \
+    if [ -f package-lock.json ]; then npm ci --omit=dev --no-audit --no-fund; else npm install --omit=dev --no-audit --no-fund; fi && \
     npm cache clean --force && \
     rm -rf /opt/magic_mirror/.git
 
@@ -72,40 +79,27 @@ RUN update-ca-certificates
 
 WORKDIR /opt/magic_mirror/modules
 
-# npx does not reliably reuse globally installed packages from mounted module directories.
-# Provide npm-check-updates as a parent dependency so `npx npm-check-updates`
-# resolves without an interactive install prompt inside /opt/magic_mirror/modules/<module>.
-COPY ./docker/shared-tools.package.json /opt/magic_mirror/modules/package.json
-
-RUN npm --prefix /opt/magic_mirror/modules install --omit=dev --no-audit --no-fund && \
-    npm cache clean --force
-
-RUN git clone --depth=1 https://github.com/uxigene/MMM-Cursor && \
-    if [ -f /opt/magic_mirror/modules/MMM-Cursor/package.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor install --omit=dev --no-audit --no-fund; fi && \
+RUN --mount=type=cache,target=/root/.npm \
+    git clone --depth=1 https://github.com/uxigene/MMM-Cursor && \
+    if [ -f /opt/magic_mirror/modules/MMM-Cursor/package-lock.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor ci --omit=dev --no-audit --no-fund; elif [ -f /opt/magic_mirror/modules/MMM-Cursor/package.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Cursor install --omit=dev --no-audit --no-fund; fi && \
     git clone --depth=1 https://github.com/shbatm/MMM-Carousel.git && \
-    npm --prefix /opt/magic_mirror/modules/MMM-Carousel install --no-audit --no-fund && \
+    if [ -f /opt/magic_mirror/modules/MMM-Carousel/package-lock.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-Carousel ci --no-audit --no-fund; else npm --prefix /opt/magic_mirror/modules/MMM-Carousel install --no-audit --no-fund; fi && \
     git clone --depth=1 https://github.com/shbatm/MMM-KeyBindings.git && \
-    npm --prefix /opt/magic_mirror/modules/MMM-KeyBindings install --no-audit --no-fund
+    if [ -f /opt/magic_mirror/modules/MMM-KeyBindings/package-lock.json ]; then npm --prefix /opt/magic_mirror/modules/MMM-KeyBindings ci --no-audit --no-fund; else npm --prefix /opt/magic_mirror/modules/MMM-KeyBindings install --no-audit --no-fund; fi
 
 WORKDIR /opt/magic_mirror
 
-RUN npm install -g \
+RUN --mount=type=cache,target=/root/.npm \
+    npm install -g \
     pm2 \
-    eslint \
-    eslint-plugin-n \
-    prettier \
     cspell \
-    @eslint/css \
-    @eslint/js \
-    @eslint/json \
-    prettier-plugin-jinja-template \
-    @stylistic/eslint-plugin \
     "playwright@${PLAYWRIGHT_VERSION}" \
     @playwright/mcp && \
     npm cache clean --force
 
-RUN git clone --depth=1 --branch "${MM_CHECKER_REPO_REF}" "${MM_CHECKER_REPO_URL}" "${MAGICMIRROR_CHECKER_REPO}" && \
-    npm --prefix "${MAGICMIRROR_CHECKER_REPO}" install --no-audit --no-fund && \
+RUN --mount=type=cache,target=/root/.npm \
+    git clone --depth=1 --branch "${MM_CHECKER_REPO_REF}" "${MM_CHECKER_REPO_URL}" "${MAGICMIRROR_CHECKER_REPO}" && \
+    if [ -f "${MAGICMIRROR_CHECKER_REPO}/package-lock.json" ]; then npm --prefix "${MAGICMIRROR_CHECKER_REPO}" ci --no-audit --no-fund; else npm --prefix "${MAGICMIRROR_CHECKER_REPO}" install --no-audit --no-fund; fi && \
     npm cache clean --force
 
 COPY ./docker/scripts/magicmirror-check.mjs /opt/mm-tools/magicmirror-check.mjs
