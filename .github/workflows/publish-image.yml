@@ -7,6 +7,9 @@ on:
     paths:
       - docker/Dockerfile
       - .github/workflows/publish-image.yml
+  schedule:
+    # GitHub Actions cron uses UTC. 09:00 UTC is 11:00 in Germany during DST.
+    - cron: '0 9 * * 6'
   workflow_dispatch:
 
 env:
@@ -51,6 +54,7 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
+          pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
