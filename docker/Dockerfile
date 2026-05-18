@@ -1,9 +1,9 @@
 ## syntax=docker/dockerfile:1.7
 FROM node:24-trixie-slim
 
-ARG PLAYWRIGHT_VERSION=1.59
+ARG PLAYWRIGHT_VERSION=1.60
 ARG MAGICMIRROR_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror.git
-ARG MAGICMIRROR_REPO_REF=v2.35.0
+ARG MAGICMIRROR_REPO_REF=v2.36.0
 ARG MM_CHECKER_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git
 ARG MM_CHECKER_REPO_REF=main
 
@@ -22,36 +22,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     curl \
     wget \
     jq \
+    less \
+    lsof \
     ripgrep \
     python3 \
     ca-certificates \
     build-essential \
     gnupg \
     httpie \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libglib2.0-0 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libu2f-udev \
-    libvulkan1 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxkbcommon0 \
-    libxrandr2 \
     xdg-utils \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -96,6 +76,11 @@ RUN --mount=type=cache,target=/root/.npm \
     "playwright@${PLAYWRIGHT_VERSION}" \
     @playwright/mcp && \
     npm cache clean --force
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    playwright install-deps chromium && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/root/.npm \
     git clone --depth=1 --branch "${MM_CHECKER_REPO_REF}" "${MM_CHECKER_REPO_URL}" "${MAGICMIRROR_CHECKER_REPO}" && \

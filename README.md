@@ -7,7 +7,7 @@ It also publishes a shared DevContainer base image for module repositories via G
 
 This README explains how to use the project in Visual Studio Code for module development, how the image is assembled, and how to run/manage the server via Docker Compose or the Dev Container.
 
-Additional supplementary documentation should live in [docs/README.md](docs/README.md).
+Additional supplementary documentation should live in [docs/README.md](docs/README.md), including the dependency checklist in [docs/dependency-maintenance.md](docs/dependency-maintenance.md).
 
 ## WARNING / TODO
 - This DevContainer does not work reliably on windows / WSL2.
@@ -38,7 +38,7 @@ This repository now contains a shared image definition at `docker/Dockerfile`.
 
 - Published image: `ghcr.io/heikogr/mmm-devcontainer:node24-trixie-slim`
 - Registry workflow: `.github/workflows/publish-image.yml`
-- Purpose: provide the shared development layers once, including Node 24 on Debian Trixie Slim, MagicMirror v2.35.0, Playwright MCP, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
+- Purpose: provide the shared development layers once, including Node 24 on Debian Trixie Slim, MagicMirror v2.36.0, Playwright MCP, Chrome, `MMM-Cursor`, PM2 and common CLI tooling.
 
 Module repositories such as `MMM-CalDAV-Tasks`, `MMM-HomeConnect2`, `MMM-Photoprism2` and `MMM-Webuntis` should use thin Dockerfiles that inherit from this base image and only add their repo-specific scripts or extra packages.
 

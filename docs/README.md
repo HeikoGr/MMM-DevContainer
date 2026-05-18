@@ -5,3 +5,4 @@ The main user and project description is in [../README.md](../README.md). This d
 ## Current Status
 
 - At the moment, the root README is the canonical documentation for setup, base image, and compose usage.
+- Dependency/update maintenance notes live in [dependency-maintenance.md](dependency-maintenance.md).
