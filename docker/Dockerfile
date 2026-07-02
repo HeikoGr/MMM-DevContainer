@@ -1,9 +1,9 @@
 ## syntax=docker/dockerfile:1.7
 FROM node:24-trixie-slim
 
-ARG PLAYWRIGHT_VERSION=1.60
+ARG PLAYWRIGHT_VERSION=1.61
 ARG MAGICMIRROR_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror.git
-ARG MAGICMIRROR_REPO_REF=v2.36.0
+ARG MAGICMIRROR_REPO_REF=v2.37.0
 ARG MM_CHECKER_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git
 ARG MM_CHECKER_REPO_REF=main
 
