@@ -1,6 +1,10 @@
 # MMM-DevContainer Documentation
 
-The main user and project description is in [../README.md](../README.md). This directory is the intended place for additional infrastructure and operations documentation if it outgrows the root README.
+User-facing setup and usage documentation now lives in the project wiki.
+
+- Wiki: <https://github.com/HeikoGr/MMM-DevContainer/wiki>
+
+This directory is the place for additional infrastructure and operations documentation.
 
 ## Current Status
 
