@@ -32,7 +32,34 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     httpie \
     xdg-utils \
     unzip \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+# GitHub CLI from the official upstream repository (not packaged in Debian). Every module
+# devcontainer built on this base image works against GitHub (PRs, workflow runs, releases), so
+# it belongs here once instead of being installed by each module's own Dockerfile. It authenticates
+# itself from the GITHUB_TOKEN that Codespaces/devcontainer injects, so no interactive
+# `gh auth login` is needed. Note: that token belongs to a GitHub App installation and cannot
+# administer the repository (branch protection returns 403) - use a personal access token for those calls.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    install -d -m 0755 /etc/apt/keyrings && \
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        -o /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
+    printf 'deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' \
+        "$(dpkg --print-architecture)" > /etc/apt/sources.list.d/github-cli.list && \
+    apt-get update && apt-get install -y --no-install-recommends gh && \
+    rm -rf /var/lib/apt/lists/*
+
+# Run containers in the timezone the modules are actually used in. The image defaults to UTC,
+# which silently breaks date-sensitive modules (WebUntis lessons, CalDAV due dates, library loan
+# due dates, ...): dates render as the wrong day between 00:00 and 02:00 local time, and by up to
+# two hours off during DST. Every module built on this image targets DACH users, so this is the
+# zone effectively all of them run in. Override per container with "containerEnv": { "TZ": "..." }
+# in devcontainer.json. Europe/Berlin, not CEST: only the zone name carries the DST rules.
+ENV TZ=Europe/Berlin
+RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
