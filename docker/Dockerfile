@@ -99,7 +99,6 @@ WORKDIR /opt/magic_mirror
 RUN --mount=type=cache,target=/root/.npm \
     npm install -g \
     pm2 \
-    cspell \
     "playwright@${PLAYWRIGHT_VERSION}" \
     @playwright/mcp && \
     npm cache clean --force
@@ -122,6 +121,24 @@ COPY ./docker/ecosystem.config.js /opt/magic_mirror/ecosystem.config.js
 COPY ./docker/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
+
+# VS Code extensions every module devcontainer built on this image should get, baked into the image
+# instead of being repeated in each module's devcontainer.json. The Dev Containers spec reads this
+# label from the image and merges it with the module's own devcontainer.json - extension lists are
+# unioned, so a module only lists what is specific to it. Docker inherits the label into child
+# images, so the module Dockerfiles get it just by building FROM this image.
+#
+# biomejs.biome is included because it is what surfaces Biome's diagnostics inline while editing
+# and drives format-on-save; the module .vscode/settings.json files bind the formatter and the
+# fixAll/organizeImports code actions to it. It picks up the per-module @biomejs/biome from
+# node_modules, so the CLI (`node --run lint`) and the editor stay on the same version and config.
+#
+# Deliberately not included: ms-azuretools.vscode-containers - it has to be installed on the host
+# to open the container in the first place, so it cannot usefully come from inside the image.
+#
+# Verify after a rebuild:
+#   docker inspect --format '{{index .Config.Labels "devcontainer.metadata"}}' ghcr.io/heikogr/mmm-devcontainer:node24-trixie-slim
+LABEL devcontainer.metadata='[{"customizations":{"vscode":{"extensions":["actboy168.tasks","vivaxy.vscode-conventional-commits","vstirbu.vscode-mermaid-preview","biomejs.biome","Anthropic.claude-code"]}}}]'
 
 EXPOSE 8080
 

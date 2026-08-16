@@ -9,7 +9,9 @@
   "remoteUser": "root",
   "containerEnv": {
     "IN_DEVCONTAINER": "1",
-    "DOCKER_CONTAINER_NAME": "magicmirror-dev"
+    "DOCKER_CONTAINER_NAME": "magicmirror-dev",
+    "PLAYWRIGHT_CHROMIUM_ARGS": "--no-sandbox --disable-dev-shm-usage --disable-gpu",
+    "ENABLE_PLAYWRIGHT_MCP": "1"
   },
 
   "portsAttributes": {
@@ -21,11 +23,11 @@
 
   "customizations": {
     "vscode": {
-      "extensions": [
-        "eamodio.gitlens",
-        "actboy168.tasks"
-      ],
+      // All extensions come from this repo's own image (devcontainer.metadata label in
+      // docker/Dockerfile) and are merged in automatically.
+      "extensions": [],
       "settings": {
+        "chat.mcp.autoStart": true,
         "editor.formatOnSave": true,
         "files.trimTrailingWhitespace": true
       }
@@ -33,5 +35,5 @@
   },
 
   "postCreateCommand": "true",
-  "postStartCommand": "echo 'Devcontainer started. App at http://localhost:8080'"
+  "postStartCommand": "mkdir -p /tmp/playwright-mcp-output && if [ \"${ENABLE_PLAYWRIGHT_MCP:-1}\" = \"1\" ]; then nohup playwright-mcp --headless --isolated --no-sandbox --port=8931 --output-dir=/tmp/playwright-mcp-output > /tmp/playwright-mcp.log 2>&1 & echo \"Playwright MCP started (logs: /tmp/playwright-mcp.log, port: 8931)\"; else echo 'Playwright MCP disabled via ENABLE_PLAYWRIGHT_MCP'; fi; echo 'Devcontainer started. App at http://localhost:8080'; echo 'Playwright MCP is configured in .vscode/mcp.json'"
 }

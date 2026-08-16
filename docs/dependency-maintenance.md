@@ -20,7 +20,7 @@ These inputs are refreshed by rebuilding the image, even when the repository con
 - Debian packages installed with `apt-get install` in `docker/Dockerfile`
 - `google-chrome-stable` from the Google APT repository in `docker/Dockerfile`
 - New patch-level content behind `node:24-trixie-slim`
-- Global npm tools installed without an explicit version pin: `pm2`, `cspell`, and `@playwright/mcp`
+- Global npm tools installed without an explicit version pin: `pm2` and `@playwright/mcp`
 - Latest default-branch content of `MMM-Cursor`, `MMM-Carousel`, and `MMM-KeyBindings`, because they are cloned without a pinned tag or commit
 - Latest `main` branch content of `MagicMirror-3rd-Party-Modules`, because `MM_CHECKER_REPO_REF=main`
 
@@ -57,7 +57,7 @@ That means the rebuild pulls a fresh repository snapshot, but it will still inst
 
 If reproducibility matters more than automatic freshness, consider pinning these currently floating inputs:
 
-- `pm2`, `cspell`, and `@playwright/mcp`
+- `pm2` and `@playwright/mcp`
 - The three bundled MagicMirror modules
 - `MM_CHECKER_REPO_REF`
 
