@@ -1,3 +1,21 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Bind-mounted module checkouts
 modules/
+
+# Local MagicMirror overrides (generate these from the *.sample files)
 config.js
+custom.css
 .env
+
+# Local docker build cache
+.docker-buildx-cache/
+
+# Playwright MCP default output dir (the devcontainer config writes to /tmp instead)
+.playwright-mcp/
