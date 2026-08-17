@@ -15,10 +15,13 @@ ENV MAGICMIRROR_SHARED_CHECK_SCRIPT=/opt/mm-tools/magicmirror-check.mjs
 
 WORKDIR /opt/magic_mirror
 
+# openssh-client is listed explicitly: in Debian it is only a Recommends of git, so
+# --no-install-recommends drops it and every SSH remote fails with "cannot run ssh".
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     git \
+    openssh-client \
     curl \
     wget \
     jq \

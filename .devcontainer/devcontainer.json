@@ -24,7 +24,8 @@
   // all that is committed. Read-only on purpose - the container runs as root, so a
   // writable mount would leave root-owned files in the host's ~/.claude.
   // postStartCommand copies the credentials into the container's own ~/.claude.
-  "mounts": ["source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/tmp/host-claude,type=bind,readonly"],
+  "mounts": ["source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/tmp/host-claude,type=bind,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/tmp/host-ssh,type=bind,readonly"],
 
 
   "customizations": {
@@ -41,5 +42,5 @@
   },
 
   "postCreateCommand": "true",
-  "postStartCommand": "mkdir -p /tmp/playwright-mcp; mkdir -p /root/.claude; if [ -f /tmp/host-claude/.credentials.json ]; then cp /tmp/host-claude/.credentials.json /root/.claude/.credentials.json && chmod 600 /root/.claude/.credentials.json && echo 'Claude Code credentials inherited from host'; else echo 'No host Claude Code credentials found - run: claude login'; fi; echo 'Devcontainer started. App at http://localhost:8080'; echo 'Playwright MCP: .mcp.json (Claude Code) and .vscode/mcp.json (Copilot Chat)'"
+  "postStartCommand": "mkdir -p /tmp/playwright-mcp /root/.claude /root/.ssh; chmod 700 /root/.ssh; if [ -f /tmp/host-claude/.credentials.json ]; then cp /tmp/host-claude/.credentials.json /root/.claude/.credentials.json && chmod 600 /root/.claude/.credentials.json; fi; if [ -d /tmp/host-ssh ]; then cp -rL /tmp/host-ssh/. /root/.ssh/ 2>/dev/null; find /root/.ssh -type f -exec chmod 600 {} +; fi; echo 'Devcontainer started. App at http://localhost:8080'"
 }
