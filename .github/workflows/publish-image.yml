@@ -4,8 +4,16 @@ on:
   push:
     branches:
       - main
+    # Everything the Dockerfile COPYs into the image belongs here. With only the
+    # Dockerfile listed, a change to the checker script or the entrypoint reached
+    # GHCR no earlier than the next weekly build.
     paths:
       - docker/Dockerfile
+      - docker/entrypoint.sh
+      - docker/ecosystem.config.js
+      - docker/scripts/**
+      - config.js
+      - custom.css
       - .github/workflows/publish-image.yml
   schedule:
     # GitHub Actions cron uses UTC. 09:00 UTC is 11:00 in Germany during DST.

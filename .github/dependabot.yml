@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  # The Dockerfile lives in docker/, so that is the directory Dependabot has to
+  # scan. This only moves the FROM image (node:24-trixie-slim). The versions
+  # pinned in ARGs - MagicMirror, Playwright, npm - stay manual; see
+  # docs/dependency-maintenance.md.
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: daily

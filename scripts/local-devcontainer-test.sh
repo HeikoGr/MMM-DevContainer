@@ -24,6 +24,7 @@ Supported modules:
   MMM-HomeConnect2
   MMM-Photoprism2
   MMM-CalDAV-Tasks
+  MMM-LibraryMonitor
 EOF
 }
 

@@ -104,7 +104,8 @@
         "MMM-Webuntis",
         "MMM-HomeConnect2",
         "MMM-Photoprism2",
-        "MMM-CalDAV-Tasks"
+        "MMM-CalDAV-Tasks",
+        "MMM-LibraryMonitor"
       ],
       "default": "MMM-Webuntis"
     }
