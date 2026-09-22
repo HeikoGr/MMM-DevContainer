@@ -500,21 +500,69 @@ async function prepareCheckerFiles(checkerRepo, validModules) {
   return { moduleDataArray };
 }
 
+/*
+ * The checker repository removed its generic stage runner in 98e4fc0e
+ * (2026-09-13): scripts/orchestrator/in-process-stage-runner.ts and
+ * scripts/orchestrator/stage-executor.ts are gone, and
+ * scripts/orchestrator/index.ts now hard-codes a switch over the stage ids and
+ * exports only main(). main() always runs collect-metadata, which scrapes every
+ * published module from GitHub - the opposite of what a local check needs. So
+ * the pipeline is driven here instead, calling exactly the stage functions that
+ * index.ts calls, with collect-metadata substituted by the local working copy.
+ */
+const STAGE_MODULE_PATHS = {
+  stageGraph: 'scripts/orchestrator/stage-graph.ts',
+  parallelProcessing: 'scripts/parallel-processing.ts',
+  aggregateCatalogue: 'scripts/aggregate-catalogue.ts',
+  generateResultMarkdown: 'scripts/generate-result-markdown.ts',
+};
+
+async function importStageModules(checkerRepoUrl) {
+  const loaded = await Promise.all(
+    Object.entries(STAGE_MODULE_PATHS).map(async ([name, relativePath]) => {
+      try {
+        return [name, await import(new URL(relativePath, checkerRepoUrl).href)];
+      } catch (error) {
+        throw new Error(
+          `Could not load "${relativePath}" from the checker repository. The upstream ` +
+            `layout has probably changed again - compare this file against ` +
+            `scripts/orchestrator/index.ts in ${UPSTREAM_REPO}. Original error: ${error.message}`,
+        );
+      }
+    }),
+  );
+
+  return Object.fromEntries(loaded);
+}
+
+function restoreEnvValue(key, previousValue) {
+  if (previousValue === undefined) {
+    delete process.env[key];
+  } else {
+    process.env[key] = previousValue;
+  }
+}
+
 async function runChecker(checkerRepo, moduleDataArray, validModules) {
   const checkText = validModules.length === 1 ? 'Running module check...' : `Running checks for ${validModules.length} modules...`;
   console.log(`\n🔎 ${checkText}`);
 
   const previousLogLevel = process.env.LOG_LEVEL;
   const previousLogFormat = process.env.LOG_FORMAT;
+  const previousNodeOptions = process.env.NODE_OPTIONS;
+
+  // Set before the stage modules are imported - they build their loggers at
+  // load time, and the worker processes inherit these.
   process.env.LOG_LEVEL = 'error';
   process.env.LOG_FORMAT = 'text';
+  process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS ?? ''} --no-warnings`.trim();
 
   const checkerRepoUrl = pathToFileURL(`${checkerRepo}${path.sep}`).href;
-  const [{ createInProcessStageRunner }, { loadStageGraph, buildExecutionPlan }, { runStagesSequentially }] = await Promise.all([
-    import(new URL('scripts/orchestrator/in-process-stage-runner.ts', checkerRepoUrl).href),
-    import(new URL('scripts/orchestrator/stage-graph.ts', checkerRepoUrl).href),
-    import(new URL('scripts/orchestrator/stage-executor.ts', checkerRepoUrl).href),
-  ]);
+  const stageModules = await importStageModules(checkerRepoUrl);
+  const { loadStageGraph, buildExecutionPlan } = stageModules.stageGraph;
+  const { runParallelProcessing, writeSkippedModulesFile } = stageModules.parallelProcessing;
+  const { runAggregateCatalogue } = stageModules.aggregateCatalogue;
+  const { runGenerateResultMarkdown } = stageModules.generateResultMarkdown;
 
   const graphPath = path.join(checkerRepo, 'pipeline', 'stage-graph.json');
   const graph = await loadStageGraph(graphPath);
@@ -548,42 +596,80 @@ async function runChecker(checkerRepo, moduleDataArray, validModules) {
     }
   };
 
-  const stageRunner = createInProcessStageRunner({
-    projectRoot: checkerRepo,
-    stageRuntimes: {
-      collectMetadata: async () => ({ modules: moduleDataArray }),
-    },
-  });
+  /*
+   * The spinner owns the terminal line, so anything a stage wants to say is
+   * collected and printed once the pipeline is done. info() is the stages'
+   * running commentary and stays hidden; warnings and errors do not.
+   */
+  const deferredMessages = [];
+  const runLogger = {
+    info: () => {},
+    warn: (message) => deferredMessages.push(`⚠️  ${String(message).trim()}`),
+    error: (message) => deferredMessages.push(`❌ ${String(message).trim()}`),
+  };
+
+  // collect-metadata is replaced by the modules prepared from the local working
+  // copy; every stage after it is the unmodified upstream pipeline.
+  const state = { modules: moduleDataArray };
 
   try {
-    await runStagesSequentially(stages, {
-      cwd: checkerRepo,
-      env: {
-        ...process.env,
-        LOG_LEVEL: 'error',
-        LOG_FORMAT: 'text',
-        NODE_OPTIONS: '--no-warnings',
-      },
-      stageRunner,
-      logger: {
-        start: (stage) => {
-          activeStage = stage.id;
-        },
-      },
-    });
+    for (const stage of stages) {
+      activeStage = stage.id;
+
+      switch (stage.id) {
+        case 'collect-metadata':
+          // Already done locally in prepareCheckerFiles().
+          break;
+
+        case 'parallel-processing': {
+          const result = await runParallelProcessing({
+            modules: state.modules,
+            projectRoot: checkerRepo,
+            runLogger,
+          });
+          state.processedModules = result.processedModules;
+          await writeSkippedModulesFile(result.results, checkerRepo);
+          break;
+        }
+
+        case 'aggregate-catalogue': {
+          const result = await runAggregateCatalogue({
+            processedModules: state.processedModules,
+            projectRoot: checkerRepo,
+            runLogger,
+          });
+          state.stats = result.stats;
+          break;
+        }
+
+        case 'generate-result-markdown': {
+          await runGenerateResultMarkdown({
+            processedModules: state.processedModules,
+            projectRoot: checkerRepo,
+            runLogger,
+            stats: state.stats,
+          });
+          break;
+        }
+
+        default:
+          throw new Error(
+            `Unsupported pipeline stage "${stage.id}". The checker pipeline has gained ` +
+              `a stage this script does not implement - see scripts/orchestrator/index.ts ` +
+              `in ${UPSTREAM_REPO}.`,
+          );
+      }
+    }
   } finally {
     clearInterval(spinnerInterval);
     flushSpinner();
-    if (previousLogLevel === undefined) {
-      delete process.env.LOG_LEVEL;
-    } else {
-      process.env.LOG_LEVEL = previousLogLevel;
-    }
-    if (previousLogFormat === undefined) {
-      delete process.env.LOG_FORMAT;
-    } else {
-      process.env.LOG_FORMAT = previousLogFormat;
-    }
+    restoreEnvValue('LOG_LEVEL', previousLogLevel);
+    restoreEnvValue('LOG_FORMAT', previousLogFormat);
+    restoreEnvValue('NODE_OPTIONS', previousNodeOptions);
+  }
+
+  for (const message of deferredMessages) {
+    console.log(message);
   }
 
   console.log('Checking complete.');
