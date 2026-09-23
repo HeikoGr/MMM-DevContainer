@@ -19,13 +19,22 @@
       "onAutoForward": "notify"
     }
   },
-  // The host's Claude Code config is mounted read-only so the container can inherit
-  // the login. Runtime bind mount: nothing lands in the image, and the path below is
-  // all that is committed. Read-only on purpose - the container runs as root, so a
-  // writable mount would leave root-owned files in the host's ~/.claude.
-  // postStartCommand copies the credentials into the container's own ~/.claude.
-  "mounts": ["source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/tmp/host-claude,type=bind,readonly",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/tmp/host-ssh,type=bind,readonly"],
+  // The host's Claude Code login, SSH keys and git config are mounted read-only so the
+  // container can inherit them. Runtime bind mounts: nothing lands in the image, and all
+  // that is committed here are three paths. Read-only on purpose - the container runs as
+  // root, so a writable mount would leave root-owned files in the host's home directory.
+  // postStartCommand copies them into the container's own HOME. ~/.gitconfig is a single
+  // file: on a host without one, Docker creates an empty directory there and the command
+  // skips it.
+  //
+  // This repo is not bind-mounted into the container (compose.yml declares no volume for
+  // it), so unlike the module devcontainers this cannot call .devcontainer/postStart.sh -
+  // the file would not exist inside the container. Keep the two in sync by hand.
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/tmp/host-claude,type=bind,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/tmp/host-ssh,type=bind,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/tmp/host-gitconfig,type=bind,readonly"
+  ],
 
 
   "customizations": {
@@ -42,5 +51,5 @@
   },
 
   "postCreateCommand": "true",
-  "postStartCommand": "mkdir -p /tmp/playwright-mcp /root/.claude /root/.ssh; chmod 700 /root/.ssh; if [ -f /tmp/host-claude/.credentials.json ]; then cp /tmp/host-claude/.credentials.json /root/.claude/.credentials.json && chmod 600 /root/.claude/.credentials.json; fi; if [ -d /tmp/host-ssh ]; then cp -rL /tmp/host-ssh/. /root/.ssh/ 2>/dev/null; find /root/.ssh -type f -exec chmod 600 {} +; fi; echo 'Devcontainer started. App at http://localhost:8080'"
+  "postStartCommand": "mkdir -p /tmp/playwright-mcp /root/.claude /root/.ssh; chmod 700 /root/.ssh; if [ -f /tmp/host-claude/.credentials.json ]; then cp /tmp/host-claude/.credentials.json /root/.claude/.credentials.json && chmod 600 /root/.claude/.credentials.json; fi; if [ -d /tmp/host-ssh ]; then cp -rL /tmp/host-ssh/. /root/.ssh/ 2>/dev/null; find /root/.ssh -type f -exec chmod 600 {} +; fi; if ! grep -q \"^github.com \" /root/.ssh/known_hosts 2>/dev/null; then ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> /root/.ssh/known_hosts 2>/dev/null || true; fi; if [ -f /tmp/host-gitconfig ]; then for k in user.name user.email; do if [ -z \"$(git config --global --get $k 2>/dev/null)\" ]; then v=\"$(git config --file /tmp/host-gitconfig --get $k 2>/dev/null)\"; [ -n \"$v\" ] && git config --global $k \"$v\"; fi; done; fi; git config --global --get user.email >/dev/null 2>&1 || echo \"No git identity - commits will fail; run: git config --global user.email <you>\"; echo 'Devcontainer started. App at http://localhost:8080'"
 }
