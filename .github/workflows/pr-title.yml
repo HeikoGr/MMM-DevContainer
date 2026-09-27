@@ -19,8 +19,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # A squash merge turns the PR title into the commit on develop. This repo has no
-      # commitlint, so the types are listed here - same list as commitlint.config.js in the modules.
+      # A squash merge turns the PR title into the commit on develop. This repo has no commit
+      # checker of its own, so the types are listed here - same list as scripts/check-commit-msg.js
+      # in the modules.
       - name: Validate PR title
         uses: amannn/action-semantic-pull-request@v6
         env:

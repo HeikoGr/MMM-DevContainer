@@ -14,7 +14,7 @@ Usage: local-devcontainer-test.sh <command> [module-name]
 
 Commands:
   build-base [--force]       Build the local shared base image with the production tag.
-  run-check <module>         Run the module's npm checker command inside a one-off local container.
+  run-check <module>         Run the module's check script (node --run check) inside a one-off local container.
   full-test <module>         Build base image, build module image, then run checker.
   open-module <module>       Open the selected module in a new VS Code window and start the devcontainer when possible.
   full-open <module>         Build the local base image, then open the selected module in a new VS Code window.
@@ -58,27 +58,6 @@ module_image_tag() {
   local sanitized
   sanitized="$(printf '%s' "$module_name" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-')"
   printf 'mmm-local-%s:devcontainer\n' "$sanitized"
-}
-
-detect_check_script_name() {
-  local module_path="$1"
-  MODULE_PATH="$module_path" node <<'EOF'
-const path = require('node:path');
-const pkg = require(path.join(process.env.MODULE_PATH, 'package.json'));
-const scripts = pkg.scripts || {};
-
-if (typeof scripts.mmcheck === 'string') {
-  process.stdout.write('mmcheck');
-  process.exit(0);
-}
-
-if (typeof scripts.check === 'string' && scripts.check.includes('magicmirror-check')) {
-  process.stdout.write('check');
-  process.exit(0);
-}
-
-process.exit(2);
-EOF
 }
 
 build_base() {
@@ -154,20 +133,24 @@ ensure_module_image() {
 
 run_check() {
   local module_name="$1"
-  local module_path image_tag npm_script
+  local module_path image_tag
   module_path="$(module_dir "$module_name")"
   image_tag="$(module_image_tag "$module_name")"
-  npm_script="$(detect_check_script_name "$module_path")" || fail "Could not detect checker npm script in $module_name/package.json"
+
+  # Every module names its checker script "check" (scripts/magicmirror-check.mjs, which needs the
+  # shared checker from the base image).
+  grep -q '"check": "node scripts/magicmirror-check.mjs' "$module_path/package.json" \
+    || fail "$module_name/package.json has no check script running scripts/magicmirror-check.mjs"
 
   ensure_module_image "$module_name"
 
-  echo "==> Running npm run $npm_script inside local container for $module_name"
+  echo "==> Running node --run check inside local container for $module_name"
   docker run --rm -t \
     --entrypoint sh \
     -v "$module_path:/opt/magic_mirror/modules/$module_name" \
     -w "/opt/magic_mirror/modules/$module_name" \
     "$image_tag" \
-    -lc "npm run $npm_script"
+    -lc "node --run check"
 }
 
 full_test() {
@@ -230,7 +213,6 @@ full_open() {
 }
 
 require_command docker
-require_command node
 
 command_name="${1:-}"
 first_arg="${2:-}"
