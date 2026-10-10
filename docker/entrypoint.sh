@@ -3,7 +3,6 @@
 set -e
 
 MAGICMIRROR_PATH="/opt/magic_mirror"
-CUSTOM_MODULES_DIR="${MAGICMIRROR_PATH}/modules/custom"
 
 git config --global alias.pr '!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f'
 
@@ -35,7 +34,7 @@ if command -v git >/dev/null 2>&1; then
 	fi
 fi
 
-# Farben für Output
+# Output colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -55,7 +54,7 @@ if [ -d "${MAGICMIRROR_PATH}/modules" ]; then
 	done
 fi
 
-# MagicMirror starten
+# Start MagicMirror
 cd "$MAGICMIRROR_PATH"
 echo "${GREEN}Starting MagicMirror under PM2...${NC}"
 
