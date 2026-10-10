@@ -8,8 +8,8 @@ These items do not move to a new major or explicitly selected release unless the
 
 - MagicMirror release via `MAGICMIRROR_REPO_REF` in `docker/Dockerfile`
 - Playwright version via `PLAYWRIGHT_VERSION` in `docker/Dockerfile`
-- Node base image major and distro via `FROM node:24-trixie-slim` in `docker/Dockerfile`
-- npm major via `npm install -g npm@11` in `docker/Dockerfile`
+- Node base image major and distro via `FROM node:26-trixie-slim` in `docker/Dockerfile`
+- npm major via `npm install -g npm@12` in `docker/Dockerfile`
 
 Recommended cadence: review these when a new MagicMirror release is available and at least once per month for major runtime/tooling upgrades.
 
@@ -19,7 +19,7 @@ These inputs are refreshed by rebuilding the image, even when the repository con
 
 - Debian packages installed with `apt-get install` in `docker/Dockerfile`
 - `google-chrome-stable` from the Google APT repository in `docker/Dockerfile`
-- New patch-level content behind `node:24-trixie-slim`
+- New patch-level content behind `node:26-trixie-slim`
 - Global npm tools installed without an explicit version pin: `pm2` and `@playwright/mcp`
 - Latest default-branch content of `MMM-Cursor`, `MMM-Carousel`, and `MMM-KeyBindings`, because they are cloned without a pinned tag or commit
 - Latest `main` branch content of `MagicMirror-3rd-Party-Modules`, because `MM_CHECKER_REPO_REF=main`

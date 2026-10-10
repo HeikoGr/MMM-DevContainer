@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEVCONTAINER_REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE_ROOT="$(cd "$DEVCONTAINER_REPO_DIR/.." && pwd)"
 
-BASE_IMAGE_TAG="${BASE_IMAGE_TAG:-ghcr.io/heikogr/mmm-devcontainer:node24-trixie-slim}"
+BASE_IMAGE_TAG="${BASE_IMAGE_TAG:-ghcr.io/heikogr/mmm-devcontainer:trixie-slim}"
 
 usage() {
   cat <<'EOF'

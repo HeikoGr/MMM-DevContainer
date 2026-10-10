@@ -53,7 +53,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
-            type=raw,value=node24-trixie-slim
+            type=raw,value=trixie-slim
             type=sha,prefix=sha-
 
       - name: Build and push

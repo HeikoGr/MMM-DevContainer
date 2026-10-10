@@ -12,4 +12,4 @@ docker compose -f compose.yml logs -f
 
 - The default container name is `magicmirror-dev`.
 - If you change `container_name`, update any scripts or tasks that depend on it.
-- The shared base image currently uses Node 24 on Debian Trixie Slim.
+- The shared base image currently uses Node 26 on Debian Trixie Slim.
