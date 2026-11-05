@@ -1,6 +1,6 @@
 FROM node:26-trixie-slim
 
-ARG PLAYWRIGHT_VERSION=1.64
+ARG PLAYWRIGHT_VERSION=1.65
 ARG MAGICMIRROR_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror.git
 ARG MAGICMIRROR_REPO_REF=v2.38.0
 ARG MM_CHECKER_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git
