@@ -49,6 +49,7 @@ The image also includes a small set of quality-of-life packages for interactive 
 - `openssh-client` for git and npm flows that use SSH remotes
 - `procps`, `lsof`, and `less` for process, port, and log inspection inside the container
 - `unzip` for modules or assets distributed as archives
+- `shellcheck` to run the modules' CI check (`shellcheck --severity=warning` on every `*.sh`) before a push
 
 ## Still Frozen Unless Upstream Changes
 

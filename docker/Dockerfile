@@ -42,6 +42,9 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean
 #
 # google-chrome-stable is the browser Playwright drives (channel: "chrome"); Playwright's own
 # browser download stays disabled via PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD.
+#
+# shellcheck: the module CI checks every *.sh with it (`shellcheck --severity=warning`), so the
+# same check runs locally before a push.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
@@ -62,6 +65,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     less \
     lsof \
     ripgrep \
+    shellcheck \
     python3 \
     build-essential \
     httpie \
