@@ -5,6 +5,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    # A fresh release waits 3 days: a compromised or broken one is usually pulled by then.
+    cooldown:
+      default-days: 3
     groups:
       actions:
         update-types: [minor, patch]
@@ -18,3 +21,5 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 3
