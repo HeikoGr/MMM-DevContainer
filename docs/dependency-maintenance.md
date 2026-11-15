@@ -10,6 +10,13 @@ These items do not move to a new major or explicitly selected release unless the
 - Playwright version via `PLAYWRIGHT_VERSION` in `docker/Dockerfile`
 - Node base image major and distro via `FROM node:26-trixie-slim` in `docker/Dockerfile`
 - npm major via `npm install -g npm@12` in `docker/Dockerfile`
+- `MMM-Cursor`, `MMM-Carousel` and `MMM-KeyBindings` via `MMM_CURSOR_REF`, `MMM_CAROUSEL_REF` and
+  `MMM_KEYBINDINGS_REF` (commit SHAs) in `docker/Dockerfile`
+- `pm2` and `@playwright/mcp` via `PM2_VERSION` and `PLAYWRIGHT_MCP_VERSION` in `docker/Dockerfile`
+
+To move a bundled module on, compare the pinned SHA with the upstream default branch
+(`gh api repos/<owner>/<repo>/commits/master --jq .sha`), read what changed and put the new SHA into
+the `ARG`. The same for the npm tools with `npm view pm2 version` and `npm view @playwright/mcp version`.
 
 Recommended cadence: review these when a new MagicMirror release is available and at least once per month for major runtime/tooling upgrades.
 
@@ -20,9 +27,8 @@ These inputs are refreshed by rebuilding the image, even when the repository con
 - Debian packages installed with `apt-get install` in `docker/Dockerfile`
 - `google-chrome-stable` from the Google APT repository in `docker/Dockerfile`
 - New patch-level content behind `node:26-trixie-slim`
-- Global npm tools installed without an explicit version pin: `pm2` and `@playwright/mcp`
-- Latest default-branch content of `MMM-Cursor`, `MMM-Carousel`, and `MMM-KeyBindings`, because they are cloned without a pinned tag or commit
-- Latest `main` branch content of `MagicMirror-3rd-Party-Modules`, because `MM_CHECKER_REPO_REF=main`
+- Latest `main` branch content of `MagicMirror-3rd-Party-Modules`, because `MM_CHECKER_REPO_REF=main` (on purpose: the
+  checker should report what the public module list reports)
 
 The weekly GitHub Actions schedule in `.github/workflows/publish-image.yml` ensures these are republished regularly.
 
@@ -43,6 +49,7 @@ The image also includes a small set of quality-of-life packages for interactive 
 - `openssh-client` for git and npm flows that use SSH remotes
 - `procps`, `lsof`, and `less` for process, port, and log inspection inside the container
 - `unzip` for modules or assets distributed as archives
+- `shellcheck` to run the modules' CI check (`shellcheck --severity=warning` on every `*.sh`) before a push
 
 ## Still Frozen Unless Upstream Changes
 
@@ -51,14 +58,9 @@ The weekly rebuild does not automatically advance every npm dependency:
 - MagicMirror dependencies stay on the upstream `package-lock.json` state when `npm ci` is used
 - The same applies to `MMM-Cursor`, `MMM-Carousel`, `MMM-KeyBindings`, and the module checker whenever their repositories contain a lockfile
 
-That means the rebuild pulls a fresh repository snapshot, but it will still install the exact dependency tree defined by the upstream lockfile. To move those transitive dependencies, the upstream project must update its lockfile or this repository must switch to a different ref.
+That means the rebuild installs the exact dependency tree defined by the lockfile of the pinned ref. To move those transitive dependencies, the upstream project must update its lockfile and this repository must move to that ref.
 
-## Optional Hardening
+## Still Floating
 
-If reproducibility matters more than automatic freshness, consider pinning these currently floating inputs:
-
-- `pm2` and `@playwright/mcp`
-- The three bundled MagicMirror modules
-- `MM_CHECKER_REPO_REF`
-
-If automatic freshness matters more, keep them floating and rely on the weekly rebuild plus occasional manual review.
+`MM_CHECKER_REPO_REF=main` is the only repository input that is not pinned. Pin it as well if a checker change ever
+breaks the image build.

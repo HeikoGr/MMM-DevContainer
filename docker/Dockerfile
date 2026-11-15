@@ -5,6 +5,13 @@ ARG MAGICMIRROR_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror.git
 ARG MAGICMIRROR_REPO_REF=v2.38.0
 ARG MM_CHECKER_REPO_URL=https://github.com/MagicMirrorOrg/MagicMirror-3rd-Party-Modules.git
 ARG MM_CHECKER_REPO_REF=main
+# Bundled third-party modules and global npm tools, pinned so the weekly rebuild does not change
+# what is in the image without a commit here. Moving them on: docs/dependency-maintenance.md.
+ARG MMM_CURSOR_REF=e0c4feff852a4561d1fe5955d06a3e812ec5f562
+ARG MMM_CAROUSEL_REF=934f6195d2488f28a7740296234bde822910ab83
+ARG MMM_KEYBINDINGS_REF=9752946f431043835c295531e7515299e25ba3a0
+ARG PM2_VERSION=7.1.2
+ARG PLAYWRIGHT_MCP_VERSION=0.0.84
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
@@ -35,6 +42,9 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean
 #
 # google-chrome-stable is the browser Playwright drives (channel: "chrome"); Playwright's own
 # browser download stays disabled via PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD.
+#
+# shellcheck: the module CI checks every *.sh with it (`shellcheck --severity=warning`), so the
+# same check runs locally before a push.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg && \
@@ -55,6 +65,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     less \
     lsof \
     ripgrep \
+    shellcheck \
     python3 \
     build-essential \
     httpie \
@@ -87,16 +98,20 @@ COPY ./custom.css /opt/magic_mirror/config/custom.css
 
 WORKDIR /opt/magic_mirror/modules
 
-# Third-party modules bundled with the image. Only runtime dependencies are installed: their
-# devDependencies (linters, test tooling, in MMM-Carousel's case even Playwright) are not needed
-# to run them.
+# Third-party modules bundled with the image, each at its pinned commit (fetched by SHA, so the
+# clone stays shallow). Only runtime dependencies are installed: their devDependencies (linters,
+# test tooling, in MMM-Carousel's case even Playwright) are not needed to run them.
 RUN --mount=type=cache,target=/root/.npm \
-    for URL in \
-        https://github.com/uxigene/MMM-Cursor.git \
-        https://github.com/shbatm/MMM-Carousel.git \
-        https://github.com/shbatm/MMM-KeyBindings.git; do \
+    for ENTRY in \
+        "https://github.com/uxigene/MMM-Cursor.git@${MMM_CURSOR_REF}" \
+        "https://github.com/shbatm/MMM-Carousel.git@${MMM_CAROUSEL_REF}" \
+        "https://github.com/shbatm/MMM-KeyBindings.git@${MMM_KEYBINDINGS_REF}"; do \
+        URL="${ENTRY%@*}" && REF="${ENTRY##*@}" && \
         DIR="$(basename "$URL" .git)" && \
-        git clone --depth=1 "$URL" "$DIR" && \
+        git init -q "$DIR" && \
+        git -C "$DIR" remote add origin "$URL" && \
+        git -C "$DIR" fetch -q --depth=1 origin "$REF" && \
+        git -C "$DIR" checkout -q FETCH_HEAD && \
         if [ -f "$DIR/package-lock.json" ]; then npm --prefix "$DIR" ci --omit=dev --no-audit --no-fund; \
         elif [ -f "$DIR/package.json" ]; then npm --prefix "$DIR" install --omit=dev --no-audit --no-fund; fi \
         || exit 1; \
@@ -106,9 +121,9 @@ WORKDIR /opt/magic_mirror
 
 RUN --mount=type=cache,target=/root/.npm \
     npm install -g \
-    pm2 \
+    "pm2@${PM2_VERSION}" \
     "playwright@${PLAYWRIGHT_VERSION}" \
-    @playwright/mcp
+    "@playwright/mcp@${PLAYWRIGHT_MCP_VERSION}"
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
